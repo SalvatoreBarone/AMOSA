@@ -13,6 +13,13 @@ int main()
 	std::vector<example_problem_t>::const_iterator it = archive.cbegin(), end = archive.cend();
 	for (; it != end; it++)
 	{
-		std:: cout << it->get_x() << "\t" << it->get_y() << std::endl;
+		std::vector<double> ff_values;
+		it->get_fitness_values(ff_values);
+		std:: cout << it->get_x() << "\t" << it->get_y() << "\t";
+		
+		for (std::vector<double>::const_iterator ff_it = ff_values.cbegin(); ff_it != ff_values.cend(); ff_it++)
+			std::cout << *ff_it << "\t";
+		
+		std::cout << std::endl;
 	}
 }

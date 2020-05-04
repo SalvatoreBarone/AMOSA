@@ -23,7 +23,7 @@
 #include <random>
 #include <limits>
 #include <exception>
-
+#include <iostream>
 
 /**
  * @mainpage Archived Multi-Objective Simulated Annealing
@@ -321,6 +321,7 @@ void optimization_engine_t<amosa_point_t>::run(unsigned int num_threads)
 	std::vector<double>::const_iterator temperatures_it = temperatures.cbegin(), temperatures_end = temperatures.cend();
 	while (temperatures_it != temperatures_end)
 	{
+		std::cout << "Current temperature " << *temperatures_it << std::endl;
 		// each thread has its own private and temporary archive
 		std::vector<std::vector<amosa_point_t>> private_archives(num_threads);
 		typename std::vector<std::vector<amosa_point_t>>::iterator arc_it = private_archives.begin();

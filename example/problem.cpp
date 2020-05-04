@@ -2,6 +2,25 @@
 #include <random>
 #include <cmath>
 
+example_problem_t::example_problem_t() : x(0), y(0)
+{
+	compute_fitness();
+}
+
+example_problem_t::example_problem_t(const example_problem_t& ep) : x(ep.x), y(ep.y), ff_values(ep.ff_values) {}
+
+
+const example_problem_t& example_problem_t::operator=(const example_problem_t& ep)
+{
+	if (this != &ep)
+	{
+		x = ep.x;
+		y = ep.y;
+		ff_values = ep.ff_values;
+	}
+	return *this;
+}
+
 /**
  * @brief This method generates a random point in the solution space.
  * 
@@ -16,8 +35,10 @@ void example_problem_t::randomize()
 {
 	std::random_device rd;
 	std::default_random_engine dre(rd());
-	x = (double) dre() / dre();
-	y = (double) dre() / dre();
+	std::bernoulli_distribution bd;
+	x = (double) dre() / dre() * (bd(dre) ? 1 : -1);
+	y = (double) dre() / dre() * (bd(dre) ? 1 : -1);
+	compute_fitness();
 }
 
 /**
@@ -37,6 +58,7 @@ void example_problem_t::neighbor()
 	std::bernoulli_distribution bd;
 	x *= (bd(gen) ? 0.9 : 1.1);
 	y *= (bd(gen) ? 0.9 : 1.1);
+	compute_fitness();
 }
 
 /**
@@ -56,6 +78,7 @@ void example_problem_t::perturbate()
 	std::bernoulli_distribution bd;
 	x *= (bd(gen) ? 0.13 : 7);
 	y *= (bd(gen) ? 0.13 : 7);
+	compute_fitness();
 }
 
 /**
@@ -75,14 +98,29 @@ double example_problem_t::distance(const example_problem_t & solution) const
 	return dist;
 }
 
-/**
- * @brief Returns a vector containing the fitness-function values calculated for the point in question.
- * 
- * @param ff_values vector containing the fitness-function values.
- */
-void example_problem_t::get_fitness_values(std::vector<double>& ff_values) const
+/* The f.f. values are copied into the values vector */
+void example_problem_t::get_fitness_values(std::vector<double>& values) const
+{
+	values.erase(values.begin(), values.end());
+	values.insert(values.begin(), ff_values.cbegin(), ff_values.cend());
+}
+
+/* compure both the fitness functions */
+void example_problem_t::compute_fitness()
 {
 	ff_values.erase(ff_values.begin(), ff_values.end());
-	ff_values.emplace_back(std::fabs(x - y));
-	ff_values.emplace_back(1/(x + y));
+	fitness_function_2();
+	fitness_function_1();
+}
+
+/* first fitness function: minimize the difference between x and y */
+void example_problem_t::fitness_function_1()
+{
+	ff_values.push_back(std::fabs(x - y));
+}
+
+/* second fitness function: maximize the x+y i.e. minimize -(x+y) */
+void example_problem_t::fitness_function_2()
+{
+	ff_values.push_back(-(x + y));
 }

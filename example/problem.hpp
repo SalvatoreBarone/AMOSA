@@ -12,9 +12,13 @@ class example_problem_t
 {
 	public:
 
-		example_problem_t() : x(0), y(0) {}
+		example_problem_t();
 
 		/* Members required by the amosa::optimization_engine_t template class */
+		
+		example_problem_t(const example_problem_t&);
+
+		const example_problem_t& operator=(const example_problem_t&);
 		
 		/**
 		 * This method should generate any point in the solution space.
@@ -62,7 +66,7 @@ class example_problem_t
 		 * This function is used very often during a single iteration of the algorithm, so it is good that its
 		 * implementation does not compute the values of the fitness functions, but only returns their value.
 		 */
-		void get_fitness_values(std::vector<double>& ff_values) const;
+		void get_fitness_values(std::vector<double>& values) const;
 
 		/* Application-specific functions */
 
@@ -73,6 +77,12 @@ class example_problem_t
 	private:
 		double x;
 		double y;
+		std::vector<double> ff_values;
+
+		/* fitness values computation functions */
+		void compute_fitness();
+		void fitness_function_1();
+		void fitness_function_2();
 };
 
 #endif
