@@ -15,26 +15,48 @@ set (AMOSA_HDR_INSTALL_DIR		/usr/include/)
 
 install(FILES ${AMOSA_SRC_DIR}/amosa.hpp DESTINATION include)
 
-set (EXAMPLE_NAME	example)
+set (EXAMPLE1_NAME	example1)
+set (EXAMPLE2_NAME	example2)
 set (EXAMPLE_SRC	${CMAKE_CURRENT_SOURCE_DIR}/example)
 
 add_executable(
-	${EXAMPLE_NAME}
+	${EXAMPLE1_NAME}
 	${EXAMPLE_SRC}/example.cpp
 	${EXAMPLE_SRC}/problem.cpp
 )
 
 target_include_directories (
-	${EXAMPLE_NAME}
+	${EXAMPLE1_NAME}
 	PRIVATE ${AMOSA_SRC_DIR}
 )
 
 target_link_directories(
-	${EXAMPLE_NAME}
+	${EXAMPLE1_NAME}
 	PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
 )
 
 target_link_libraries(
-	${EXAMPLE_NAME}
+	${EXAMPLE1_NAME}
+	pthread
+)
+
+add_executable(
+	${EXAMPLE2_NAME}
+	${EXAMPLE_SRC}/example2.cpp
+	${EXAMPLE_SRC}/problem2.cpp
+)
+
+target_include_directories (
+	${EXAMPLE2_NAME}
+	PRIVATE ${AMOSA_SRC_DIR}
+)
+
+target_link_directories(
+	${EXAMPLE2_NAME}
+	PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+)
+
+target_link_libraries(
+	${EXAMPLE2_NAME}
 	pthread
 )

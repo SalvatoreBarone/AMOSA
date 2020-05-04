@@ -9,7 +9,6 @@ example_problem_t::example_problem_t() : x(0), y(0)
 
 example_problem_t::example_problem_t(const example_problem_t& ep) : x(ep.x), y(ep.y), ff_values(ep.ff_values) {}
 
-
 const example_problem_t& example_problem_t::operator=(const example_problem_t& ep)
 {
 	if (this != &ep)

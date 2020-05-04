@@ -78,6 +78,31 @@
  * 
  * @include problem.cpp
  * 
+ * @subsection define-constrained Define a constrained problem
+ * 
+ * Consider the optimization problem of minimizing @f$ f(x,y) = 7 x + y @f$ under the following constraints:
+ * 1. @f$ 4x + y \ge 12 @f$
+ * 2. @f$ x \ge 0 @f$
+ * 3. @f$ 5x - y \le 0 @f$
+ * 4. @f$ y	\ge 0 @f$
+ * 
+ * Note that the example problem is extremely simple (it is not a multi-objective problem) and the optimum, which is
+ * (0,12), can be easely found by hand. The following example shows how to encode a constrained optimization problem.
+ * The efficient encoding of randomize, neighbor and perturbed functions can have beneficial effects on the algorithm
+ * execution time. In particular, it is necessary to implement these functions so that a few cycles are needed to
+ * obtain a point in the solution space that meets the constraints.
+ * A good knowledge of the problem to be solved is therefore necessary, so that random points and points close to a
+ * given point in the space of the solutions that respect the constraints can be generated.
+ * 
+ * @include problem2.hpp
+ * 
+ * A good technique to generate random points is to generate the value of variables taking into account the constraints
+ * and the relationships between variables imposed by constraints.
+ * A good technique to generate points close to a given point, is to define a variation interval first wide, then
+ * narrower and narrower.
+ * 
+ * @include problem2.cpp
+ * 
  * @subsection compile Compile and link.
  * The AMOSA template library is provided with a CMake file for installation purpose. Just run the following
  * @code
@@ -356,6 +381,11 @@ void optimization_engine_t<amosa_point_t>::run(unsigned int num_threads)
 		
 		// Archive clustering is needed to reduce the amount of archive solutions.
 		archive_clustering(pareto_archive, true);
+		
+		// Removes eventually dominated solutions from the archive
+		typename std::vector<amosa_point_t>::iterator it = pareto_archive.begin();
+		for (; it != pareto_archive.end(); it++)
+			remove_dominated_archived_solutions(*it, pareto_archive);		
 	}
 }
 
