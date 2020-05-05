@@ -2,11 +2,14 @@ project(AMOSA LANGUAGES CXX)
 cmake_minimum_required(VERSION 3.13)
 
 set (CMAKE_CXX_STANDARD 11)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/libs)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/libs)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/libs)
+set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/libs)
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+find_package(Threads)
+
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -ggdb3 -O0 ")
 
@@ -37,7 +40,7 @@ target_link_directories(
 
 target_link_libraries(
 	${EXAMPLE1_NAME}
-	pthread
+	${CMAKE_THREAD_LIBS_INIT}
 )
 
 add_executable(
@@ -58,5 +61,5 @@ target_link_directories(
 
 target_link_libraries(
 	${EXAMPLE2_NAME}
-	pthread
+	${CMAKE_THREAD_LIBS_INIT}
 )
