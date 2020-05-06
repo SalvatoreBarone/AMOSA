@@ -67,8 +67,8 @@ target_link_libraries(
 
 add_executable(
 	${EXAMPLE3_NAME}
-	${EXAMPLE_SRC}/example_v2.cpp
-	${EXAMPLE_SRC}/problem.cpp
+	${EXAMPLE_SRC}/example3.cpp
+	${EXAMPLE_SRC}/problem3.cpp
 )
 
 target_include_directories (

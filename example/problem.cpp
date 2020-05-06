@@ -50,14 +50,12 @@ void example_problem_t::randomize()
  * @warning If the optimization problem is constrained, this function must generate points that respect these
  * constraints.
  */
-void example_problem_t::neighbor()
+example_problem_t example_problem_t::neighbor() const
 {
 	std::random_device rd;
     std::default_random_engine gen(rd());
 	std::bernoulli_distribution bd;
-	x *= (bd(gen) ? 0.9 : 1.1);
-	y *= (bd(gen) ? 0.9 : 1.1);
-	compute_fitness();
+	return example_problem_t(x * (bd(gen) ? 0.9 : 1.1), y * (bd(gen) ? 0.9 : 1.1));
 }
 
 /**
@@ -70,14 +68,12 @@ void example_problem_t::neighbor()
  * @warning If the optimization problem is constrained, this function must generate points that respect these
  * constraints.
  */
-void example_problem_t::perturbate()
+example_problem_t example_problem_t::perturbate() const
 {
 	std::random_device rd;
     std::default_random_engine gen(rd());
 	std::bernoulli_distribution bd;
-	x *= (bd(gen) ? 0.13 : 7);
-	y *= (bd(gen) ? 0.13 : 7);
-	compute_fitness();
+	return example_problem_t(x * (bd(gen) ? 0.13 : 7), y * (bd(gen) ? 0.13 : 7));
 }
 
 /**
@@ -108,8 +104,8 @@ void example_problem_t::get_fitness_values(std::vector<double>& values) const
 void example_problem_t::compute_fitness()
 {
 	ff_values.erase(ff_values.begin(), ff_values.end());
-	fitness_function_2();
 	fitness_function_1();
+	fitness_function_2();
 }
 
 /* first fitness function: minimize the difference between x and y */

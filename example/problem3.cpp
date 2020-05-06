@@ -1,4 +1,4 @@
-#include "problem2.hpp"
+#include "problem3.hpp"
 #include <random>
 #include <cmath>
 
@@ -6,7 +6,7 @@ static std::random_device rd;
 static std::default_random_engine gen(rd());
 static std::bernoulli_distribution bd;
 
-example_problem_t::example_problem_t() : x(1), y(1)
+example_problem_t::example_problem_t(double tentative_x, double tentative_y) : x(tentative_x), y(tentative_y)
 {
 	compute_fitness();
 }

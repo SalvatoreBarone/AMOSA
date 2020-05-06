@@ -40,7 +40,7 @@ class example_problem_t
 		 * If the optimization problem is constrained, this function must generate points that respect these
 		 * constraints.
 		 */
-		void neighbor();
+		example_problem_t neighbor() const;
 
 		/** 
 		 * It significantly perturbs a point in the solution space.
@@ -50,7 +50,7 @@ class example_problem_t
 		 * 
 		 * If the optimization problem is constrained, this function must generate points that respect these constraints.
 		 */
-		void perturbate();
+		example_problem_t perturbate() const;
 
 		/** 
 		 * Calculates the distance between the point in question and another point in the solution space.

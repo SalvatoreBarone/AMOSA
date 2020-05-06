@@ -430,7 +430,7 @@ void optimization_engine_t<amosa_point_t>::run(const amosa_point_t& baseline_sol
 		temperatures.push_back(current_temperature);
 		current_temperature *= cooling_factor;
 	}
-	while (temperatures.size() % num_threads != 0)
+	while ((temperatures.size() % num_threads) != 0)
 		temperatures.insert(temperatures.begin(), initial_temperature);
 
 	std::vector<double>::const_iterator temperatures_it = temperatures.cbegin(), temperatures_end = temperatures.cend();
@@ -551,8 +551,7 @@ void optimization_engine_t<amosa_point_t>::initialize_archive_single_thread(
 		for (unsigned int j = 0; j < num_iteration; j++)
 		{
 			// generating a new solution
-			amosa_point_t new_solution = candidate_solution;
-			new_solution.neighbor();
+			amosa_point_t new_solution = candidate_solution.neighbor();
 			if (dominates(new_solution, candidate_solution))
 				candidate_solution = std::move(new_solution);
 		}
@@ -634,14 +633,13 @@ void optimization_engine_t<amosa_point_t>::initialize_archive_baseline_single_th
 {
 	for (unsigned i = 0; i < solutions; i++)
 	{
-		amosa_point_t candidate_solution = baseline_solution;
+		amosa_point_t candidate_solution = baseline_solution.perturbate();
 
 		// Performing hill-climbing
 		for (unsigned int j = 0; j < num_iteration; j++)
 		{
 			// generating a new solution
-			amosa_point_t new_solution = candidate_solution;
-			new_solution.neighbor();
+			amosa_point_t new_solution = candidate_solution.neighbor();
 			if (dominates(new_solution, candidate_solution))
 				candidate_solution = std::move(new_solution);
 		}
@@ -952,8 +950,7 @@ void optimization_engine_t<amosa_point_t>::run_single_thread(
 	for (unsigned int i = 0; i < num_iteration; i++)
 	{
 		// Generation of a new perturbed candidate solution
-		amosa_point_t candidate_next = current;
-		candidate_next.perturbate();
+		amosa_point_t candidate_next = current.perturbate();
 		
 		// deltas are pre-computer in order to improve parallel computing
 		double delta_dom_avg_inc_current, delta_dom_min, delta_dom_avg;

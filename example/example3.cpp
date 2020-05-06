@@ -1,11 +1,11 @@
 #include <vector>
 #include <iostream>
 #include "amosa.hpp"
-#include "problem.hpp"
+#include "problem3.hpp"
 
 int main()
 {
-	amosa::optimization_engine_t<example_problem_t> engine(3422, 24, 0.97, 1500, 100, 30);
+	amosa::optimization_engine_t<example_problem_t> engine(3422, 24, 0.97, 2500, 100, 30);
 
 	example_problem_t baseline_solution(5, 5);
 

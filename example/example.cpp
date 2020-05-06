@@ -5,7 +5,7 @@
 
 int main()
 {
-	amosa::optimization_engine_t<example_problem_t> engine(3422, 24, 0.97, 1500, 100, 30);
+	amosa::optimization_engine_t<example_problem_t> engine(3422, 24, 0.97, 2500, 100, 30);
 
 	engine.run(8);
 
