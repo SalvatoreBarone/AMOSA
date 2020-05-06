@@ -20,6 +20,7 @@ install(FILES ${AMOSA_SRC_DIR}/amosa.hpp DESTINATION include)
 
 set (EXAMPLE1_NAME	example1)
 set (EXAMPLE2_NAME	example2)
+set (EXAMPLE3_NAME	example3)
 set (EXAMPLE_SRC	${CMAKE_CURRENT_SOURCE_DIR}/example)
 
 add_executable(
@@ -61,5 +62,26 @@ target_link_directories(
 
 target_link_libraries(
 	${EXAMPLE2_NAME}
+	${CMAKE_THREAD_LIBS_INIT}
+)
+
+add_executable(
+	${EXAMPLE3_NAME}
+	${EXAMPLE_SRC}/example_v2.cpp
+	${EXAMPLE_SRC}/problem.cpp
+)
+
+target_include_directories (
+	${EXAMPLE3_NAME}
+	PRIVATE ${AMOSA_SRC_DIR}
+)
+
+target_link_directories(
+	${EXAMPLE3_NAME}
+	PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+)
+
+target_link_libraries(
+	${EXAMPLE3_NAME}
 	${CMAKE_THREAD_LIBS_INIT}
 )

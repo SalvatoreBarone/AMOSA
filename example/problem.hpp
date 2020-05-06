@@ -12,7 +12,7 @@ class example_problem_t
 {
 	public:
 
-		example_problem_t();
+		example_problem_t(double tentative_x = 0, double tentative_y = 0);
 
 		/* Members required by the amosa::optimization_engine_t template class */
 		

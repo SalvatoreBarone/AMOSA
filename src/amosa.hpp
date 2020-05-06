@@ -1,9 +1,12 @@
-/*
- * This file is part of AMOSA.
+/**
+ * @file amosa.hpp
+ * @author Salvatore Barone <salvator.barone@gmail.com>
+ *
+ * Copyright (C) 2020 Salvatore Barone <salvator.barone@gmail.com>
  * 
- * AMOSA is free software: you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
  * any later version.
  * 
  * This program is distributed in the hope that it will be useful,
@@ -268,6 +271,8 @@ class optimization_engine_t
 
 	void run(unsigned int num_threads = 2);
 
+	void run(const amosa_point_t&, unsigned int num_threads = 2);
+
 	/**
 	 * @brief Get the archive.
 	 * 
@@ -289,9 +294,13 @@ class optimization_engine_t
 
 		std::vector<amosa_point_t> pareto_archive;
 
-		void initialize_archive(unsigned num_threads);
+		void initialize_archive(unsigned);
 
 		void initialize_archive_single_thread(unsigned, typename std::vector<std::vector<amosa_point_t>>::iterator);
+
+		void initialize_archive_baseline(const amosa_point_t&, unsigned);
+
+		void initialize_archive_baseline_single_thread(const amosa_point_t&, unsigned, typename std::vector<std::vector<amosa_point_t>>::iterator);
 
 		void compute_minimum_dominance(double &, unsigned &);
 
@@ -389,14 +398,96 @@ void optimization_engine_t<amosa_point_t>::run(unsigned int num_threads)
 	}
 }
 
+
+/**
+ * @brief Run the optimization algorithm, starting on a known solution, using either a single or multiple threads.
+ *
+ * @details
+ * In case a non-trivial solution of the problem is available, even far from the optimal one, it is possible to start 
+ * the algorithm from that solution. In this case the archive is initially built from this solution, instead of random
+ * solutions. Once the archive is built from this solution, the algorithm continues normally.
+ * 
+ * @param baseline_solution Starting solution.
+ * @param num_threads number of threads. In order to speed up the algorithm, the number of iterations expected for each
+ * temperature level is divided over several threads.
+ *
+ * @tparam amosa_point_t
+ * @param num_threads
+ */
+template<typename amosa_point_t>
+void optimization_engine_t<amosa_point_t>::run(const amosa_point_t& baseline_solution, unsigned int num_threads)
+{
+	if (num_threads == 0)
+		throw std::invalid_argument("The amount of parallel threads cannot be 0");
+
+	initialize_archive_baseline(baseline_solution, num_threads);
+
+	// temperature partitioning and padding
+	double current_temperature = initial_temperature;
+	std::vector<double> temperatures;
+	while (current_temperature > final_temperature)
+	{
+		temperatures.push_back(current_temperature);
+		current_temperature *= cooling_factor;
+	}
+	while (temperatures.size() % num_threads != 0)
+		temperatures.insert(temperatures.begin(), initial_temperature);
+
+	std::vector<double>::const_iterator temperatures_it = temperatures.cbegin(), temperatures_end = temperatures.cend();
+	while (temperatures_it != temperatures_end)
+	{
+		std::cout << "Current temperature " << *temperatures_it << std::endl;
+		// each thread has its own private and temporary archive
+		std::vector<std::vector<amosa_point_t>> private_archives(num_threads);
+		typename std::vector<std::vector<amosa_point_t>>::iterator arc_it = private_archives.begin();
+		std::vector<std::thread> threads_id;
+		for (unsigned i = 0; i < num_threads; i++, arc_it++, temperatures_it++)
+		{
+			arc_it->erase(arc_it->begin(), arc_it->end()); // maybe can be removed
+
+			// generating private archives
+			arc_it->insert(arc_it->begin(), pareto_archive.begin(), pareto_archive.end());
+			// spawning a new thread. Each thread processes a given temperature
+			threads_id.push_back(
+				std::thread(
+					&optimization_engine_t<amosa_point_t>::run_single_thread,
+					std::ref(*this), 
+					arc_it,
+					*temperatures_it));
+		}
+
+		// private and temporary archives must be merged
+		std::vector<std::thread>::iterator thr_it;
+		arc_it = private_archives.begin();
+		pareto_archive.erase(pareto_archive.begin(), pareto_archive.end());
+		for(thr_it = threads_id.begin(); thr_it != threads_id.end(); thr_it++)
+		{
+			thr_it->join();
+			pareto_archive.insert(
+				pareto_archive.end(),
+				std::make_move_iterator(arc_it->begin()),
+				std::make_move_iterator(arc_it->end()));
+		}
+		
+		// Archive clustering is needed to reduce the amount of archive solutions.
+		archive_clustering(pareto_archive, true);
+		
+		// Removes eventually dominated solutions from the archive
+		typename std::vector<amosa_point_t>::iterator it = pareto_archive.begin();
+		for (; it != pareto_archive.end(); it++)
+			remove_dominated_archived_solutions(*it, pareto_archive);		
+	}
+
+}
+
 /**
  * @brief Archive initialization.
  * 
- * @details
- * A number of random solutions is generated, then, each of these solutions is refined using hill-clinbimg, accepting a
- * new solution only if dominated the previous one. Hill-climbing is performed a fixed amount of iterations. Thereafter,
- * the non-dominated solutions obtained with hill-climbing are stored in the archive up to a maximum equals to the
- * archive size hard limit. In case the amount of non dominated solutions excedes the size limit, clustering is applied.
+ *
+ * @note This function only manages workload partitioning among threads, in order to speed-up the initialization
+ * process. See initialize_archive_single_thread().
+ *
+ * @param num_threads number of threads to be used to speed-up the initialization process.
  */
 template<typename amosa_point_t>
 void optimization_engine_t<amosa_point_t>::initialize_archive(unsigned num_threads)
@@ -434,6 +525,18 @@ void optimization_engine_t<amosa_point_t>::initialize_archive(unsigned num_threa
 	archive_clustering(pareto_archive, true);
 }
 
+/**
+ * @brief  Function performed by a single thread during the archive initialization procedure.
+ *
+ * @details
+ * A number of random solutions is generated, then, each of these solutions is refined using hill-clinbimg, accepting a
+ * new solution only if dominated the previous one. Hill-climbing is performed a fixed amount of iterations. Thereafter,
+ * the non-dominated solutions obtained with hill-climbing are stored in the archive up to a maximum equals to the
+ * archive size hard limit. In case the amount of non dominated solutions excedes the size limit, clustering is applied.
+ *
+ * @param solutions amount of solutions the thread has to generate
+ * @param private_archive_it private archive for the thread
+ */
 template<typename amosa_point_t>
 void optimization_engine_t<amosa_point_t>::initialize_archive_single_thread(
 	unsigned solutions,
@@ -443,6 +546,95 @@ void optimization_engine_t<amosa_point_t>::initialize_archive_single_thread(
 	{
 		amosa_point_t candidate_solution;
 		candidate_solution.randomize();
+
+		// Performing hill-climbing
+		for (unsigned int j = 0; j < num_iteration; j++)
+		{
+			// generating a new solution
+			amosa_point_t new_solution = candidate_solution;
+			new_solution.neighbor();
+			if (dominates(new_solution, candidate_solution))
+				candidate_solution = std::move(new_solution);
+		}
+
+		// After hill-climbing, candidate solution are always inserted in the archive. The archive clustering will
+		// eventually remove duplicate or dominated solutions.
+		private_archive_it->push_back(candidate_solution);
+	}
+}
+
+/**
+ * @brief Archive initialization.
+ * 
+ * @note This function only manages workload partitioning among threads, in order to speed-up the initialization
+ * process. See initialize_archive_single_thread().
+ *
+ * @param num_threads number of threads to be used to speed-up the initialization process.
+ */
+template<typename amosa_point_t>
+void optimization_engine_t<amosa_point_t>::initialize_archive_baseline(const amosa_point_t& baseline_solution, unsigned num_threads)
+{
+	// twice the soft limit archive size solutions will be generated, to improve diversity
+	unsigned total_starting_solutions = 2 * archive_size_soft_limit / num_threads;
+	
+	// partitioning of the outer loop
+	// each thread has its own private and temporary archive
+	std::vector<std::vector<amosa_point_t>> private_archives(num_threads);
+	typename std::vector<std::vector<amosa_point_t>>::iterator arc_it = private_archives.begin();
+	std::vector<std::thread> threads_id;
+	for (unsigned i = 0; i < num_threads; i++, arc_it++)
+		threads_id.push_back(
+			std::thread(
+				&optimization_engine_t<amosa_point_t>::initialize_archive_baseline_single_thread,
+				std::ref(*this), 
+				baseline_solution,
+				total_starting_solutions, 
+				arc_it));
+
+	// private and temporary archives must be merged
+	std::vector<std::thread>::iterator thr_it;
+	arc_it = private_archives.begin();
+	pareto_archive.erase(pareto_archive.begin(), pareto_archive.end());
+	for(thr_it = threads_id.begin(); thr_it != threads_id.end(); thr_it++)
+	{
+		thr_it->join();
+		pareto_archive.insert(
+			pareto_archive.end(),
+			std::make_move_iterator(arc_it->begin()),
+			std::make_move_iterator(arc_it->end()));
+	}
+	
+	// Archive clustering is needed to reduce the amount of archive solutions.
+	archive_clustering(pareto_archive, true);
+
+}
+
+/**
+ * @brief  Function performed by a single thread during the archive initialization procedure.
+ *
+ * @details
+ * In case a non-trivial solution of the problem is available, even far from the optimal one, it is possible to start 
+ * the algorithm from that solution. In this case the archive is initially built from this solution, instead of random
+ * solutions. Once the archive is built from this solution, the algorithm continues normally.
+ * 
+ * The baseline solution is refined using hill-clinbimg, accepting a new solution only if dominated the previous one. 
+ * Hill-climbing is performed a fixed amount of iterations. Thereafter, the non-dominated solutions obtained with 
+ * hill-climbing are stored in the archive up to a maximum equals to the archive size hard limit. 
+ * In case the amount of non dominated solutions excedes the size limit, clustering is applied.
+ *
+ * @param baseline_solution The starting solution 
+ * @param solutions amount of solutions the thread has to generate
+ * @param private_archive_it private archive for the thread
+ */
+template<typename amosa_point_t>
+void optimization_engine_t<amosa_point_t>::initialize_archive_baseline_single_thread(
+		const amosa_point_t& baseline_solution, 
+		unsigned solutions, 
+		typename std::vector<std::vector<amosa_point_t>>::iterator private_archive_it)
+{
+	for (unsigned i = 0; i < solutions; i++)
+	{
+		amosa_point_t candidate_solution = baseline_solution;
 
 		// Performing hill-climbing
 		for (unsigned int j = 0; j < num_iteration; j++)

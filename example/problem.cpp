@@ -2,7 +2,7 @@
 #include <random>
 #include <cmath>
 
-example_problem_t::example_problem_t() : x(0), y(0)
+example_problem_t::example_problem_t(double tentative_x, double tentative_y) : x(tentative_x), y(tentative_y)
 {
 	compute_fitness();
 }
