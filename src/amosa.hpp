@@ -106,6 +106,14 @@
  * 
  * @include problem2.cpp
  * 
+ * In the case a non-trivial solution of the problem is available, even far from the optimal one, it is possible to
+ * start the algorithm from that solution. In this case the archive is initially built from this solution, instead of
+ * random solutions. Once the archive is built from this solution, the algorithm continues normally. The example
+ * reported below makes use of the amosa::optimization_engine_t::run() function to start the algorithm from a known
+ * solution.
+ * 
+ * @include example3.cpp
+ * 
  * @subsection compile Compile and link.
  * The AMOSA template library is provided with a CMake file for installation purpose. Just run the following
  * @code
@@ -403,9 +411,9 @@ void optimization_engine_t<amosa_point_t>::run(unsigned int num_threads)
  * @brief Run the optimization algorithm, starting on a known solution, using either a single or multiple threads.
  *
  * @details
- * In case a non-trivial solution of the problem is available, even far from the optimal one, it is possible to start 
- * the algorithm from that solution. In this case the archive is initially built from this solution, instead of random
- * solutions. Once the archive is built from this solution, the algorithm continues normally.
+ * In the case a non-trivial solution of the problem is available, even far from the optimal one, it is possible to
+ * start the algorithm from that solution. In this case the archive is initially built from this solution, instead of
+ * random solutions. Once the archive is built from this solution, the algorithm continues normally.
  * 
  * @param baseline_solution Starting solution.
  * @param num_threads number of threads. In order to speed up the algorithm, the number of iterations expected for each
@@ -577,7 +585,8 @@ void optimization_engine_t<amosa_point_t>::initialize_archive_baseline(const amo
 	unsigned total_starting_solutions = 2 * archive_size_soft_limit / num_threads;
 	
 	// partitioning of the outer loop
-	// each thread has its own private and temporary archive
+	// each thread has its own private and temporary archive and generates a
+	// initial solution independently
 	std::vector<std::vector<amosa_point_t>> private_archives(num_threads);
 	typename std::vector<std::vector<amosa_point_t>>::iterator arc_it = private_archives.begin();
 	std::vector<std::thread> threads_id;
@@ -590,7 +599,7 @@ void optimization_engine_t<amosa_point_t>::initialize_archive_baseline(const amo
 				total_starting_solutions, 
 				arc_it));
 
-	// private and temporary archives must be merged
+	// At the end of the execution of each thread, private and temporary archives must be merged
 	std::vector<std::thread>::iterator thr_it;
 	arc_it = private_archives.begin();
 	pareto_archive.erase(pareto_archive.begin(), pareto_archive.end());
@@ -605,7 +614,6 @@ void optimization_engine_t<amosa_point_t>::initialize_archive_baseline(const amo
 	
 	// Archive clustering is needed to reduce the amount of archive solutions.
 	archive_clustering(pareto_archive, true);
-
 }
 
 /**
@@ -773,7 +781,6 @@ void optimization_engine_t<amosa_point_t>::amounts_of_domination(
 	avg /= count;
 }
 
-
 /**
  * @brief Verifies the relationship of dominance between two points of the solution space.
  * 
@@ -934,6 +941,16 @@ void optimization_engine_t<amosa_point_t>::add_candidate_solution(
 	archive_clustering(archive);
 }
 
+/**
+ * @brief Function performed by each of the threads running the AMOSA algorithm.
+ * 
+ * @tparam amosa_point_t 
+ * @param archive_it reference to the thread private archive. This is used to avoid synchronization and
+ * to speed-up computation.
+ * 
+ * @param current_temperature Current temperature. Each thread performs the algorithm considering a different
+ * current temperature degree.
+ */
 template<typename amosa_point_t>
 void optimization_engine_t<amosa_point_t>::run_single_thread(
 	typename std::vector<std::vector<amosa_point_t>>::iterator archive_it,
