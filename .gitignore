@@ -35,3 +35,6 @@ build/
 doc/
 .vscode
 *.swp
+.idea
+*.code-workspace
+cmake-build-debug
