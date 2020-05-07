@@ -24,15 +24,17 @@ const example_problem_t& example_problem_t::operator=(const example_problem_t& e
 	return *this;
 }
 
-void example_problem_t::randomize()
+example_problem_t example_problem_t::randomize()
 {
+	example_problem_t random_solution;
 	do
 	{
-		x = (double) gen() / (double) gen();
-		y = 5 * x + (double)(9 / (9 + gen() % 90));
+		random_solution.x = (double) gen() / (double) gen();
+		random_solution.y = 5 * random_solution.x + (double)(9 / (9 + gen() % 90));
 	}
-	while ((!constraint_1() || !constraint_2() || !constraint_3() || !constraint_4()));
-	compute_fitness();
+	while (!random_solution.meet_constraints());
+	random_solution.compute_fitness();
+	return random_solution;
 }
 
 example_problem_t example_problem_t::neighbor() const

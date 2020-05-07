@@ -552,8 +552,7 @@ void optimization_engine_t<amosa_point_t>::initialize_archive_single_thread(
 {
 	for (unsigned i = 0; i < solutions; i++)
 	{
-		amosa_point_t candidate_solution;
-		candidate_solution.randomize();
+		amosa_point_t candidate_solution = amosa_point_t::randomize();
 
 		// Performing hill-climbing
 		for (unsigned int j = 0; j < num_iteration; j++)
@@ -944,7 +943,6 @@ void optimization_engine_t<amosa_point_t>::add_candidate_solution(
 /**
  * @brief Function performed by each of the threads running the AMOSA algorithm.
  * 
- * @tparam amosa_point_t 
  * @param archive_it reference to the thread private archive. This is used to avoid synchronization and
  * to speed-up computation.
  * 
@@ -957,12 +955,11 @@ void optimization_engine_t<amosa_point_t>::run_single_thread(
 	double current_temperature)
 {
 	std::vector<amosa_point_t>& archive = *archive_it;
-	amosa_point_t current; 
-		
+			
 	// picking a random solution from the archive.
 	std::random_device rd;
 	std::default_random_engine dre(rd());
-	current = archive[dre() % archive.size()];
+	amosa_point_t current = archive[dre() % archive.size()];
 	
 	for (unsigned int i = 0; i < num_iteration; i++)
 	{

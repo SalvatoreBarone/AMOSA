@@ -21,7 +21,7 @@ const example_problem_t& example_problem_t::operator=(const example_problem_t& e
 }
 
 /**
- * @brief This method generates a random point in the solution space.
+ * @brief This static method generates a random point in the solution space.
  * 
  * @details
  * This method should generate any point in the solution space, in a totally random way. It is used during the
@@ -30,14 +30,14 @@ const example_problem_t& example_problem_t::operator=(const example_problem_t& e
  * @warning If the optimization problem is constrained, this function must generate points that respect these
  * constraints.
  */
-void example_problem_t::randomize()
+example_problem_t example_problem_t::randomize()
 {
 	std::random_device rd;
 	std::default_random_engine dre(rd());
 	std::bernoulli_distribution bd;
-	x = (double) dre() / dre() * (bd(dre) ? 1 : -1);
-	y = (double) dre() / dre() * (bd(dre) ? 1 : -1);
-	compute_fitness();
+	return example_problem_t(
+						(double) dre() / dre() * (bd(dre) ? 1 : -1),
+						(double) dre() / dre() * (bd(dre) ? 1 : -1));
 }
 
 /**

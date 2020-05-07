@@ -21,7 +21,7 @@ class example_problem_t
 		const example_problem_t& operator=(const example_problem_t&);
 		
 		/**
-		 * This method should generate any point in the solution space.
+		 * This static method should generate any point in the solution space.
 		 * 
 		 * This method should generate any point in the solution space, in a totally random way. It is used during the
 		 * initialization operations of the AMOSA archive.
@@ -29,7 +29,7 @@ class example_problem_t
 		 * If the optimization problem is constrained, this function must generate points that respect these
 		 * constraints.
 		 */
-		void randomize();
+		static example_problem_t randomize();
 
 		/**
 		 * Very little changes a point in the solution space to generate a nearby solution.

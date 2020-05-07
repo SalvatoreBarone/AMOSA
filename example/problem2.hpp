@@ -15,10 +15,10 @@
 class example_problem_t
 {
 	public:
-		example_problem_t();
+		example_problem_t(double tentative_x = 1, double tentative_y = 1);
 		example_problem_t(const example_problem_t&);
 		const example_problem_t& operator=(const example_problem_t&);
-		void randomize();
+		static example_problem_t randomize();
 		example_problem_t neighbor() const;
 		example_problem_t perturbate() const;
 		double distance(const example_problem_t & a_solution) const;
