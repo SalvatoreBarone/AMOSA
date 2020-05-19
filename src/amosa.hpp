@@ -346,12 +346,15 @@ void optimization_engine_t<amosa_point_t>::run(unsigned int num_threads)
 {
 	if (num_threads == 0)
 		throw std::invalid_argument("The amount of parallel threads cannot be 0");
-
+	std::cout << "Running the Archived Multi-Objective Simulated Annealing optimization algorithm with " << num_threads << " threads!" << std::endl << std::endl;
+	std::cout << "Initializing the archive...";
 	initialize_archive(num_threads);
+	std::cout <<" Done!" << std::endl;
 
 	// temperature partitioning and padding
 	double current_temperature = initial_temperature;
 	std::vector<double> temperatures;
+	std::cout << "Performing temperature partitioning among threads...";
 	while (current_temperature > final_temperature)
 	{
 		temperatures.push_back(current_temperature);
@@ -361,9 +364,11 @@ void optimization_engine_t<amosa_point_t>::run(unsigned int num_threads)
 		temperatures.insert(temperatures.begin(), initial_temperature);
 
 	std::vector<double>::const_iterator temperatures_it = temperatures.cbegin(), temperatures_end = temperatures.cend();
+	std::cout << " Done!" << std::endl;
+	
 	while (temperatures_it != temperatures_end)
 	{
-		std::cout << "Current temperature " << *temperatures_it << std::endl;
+		std::cout << "Current temperature " << *temperatures_it << ". Spawning threds...";
 		// each thread has its own private and temporary archive
 		std::vector<std::vector<amosa_point_t>> private_archives(num_threads);
 		typename std::vector<std::vector<amosa_point_t>>::iterator arc_it = private_archives.begin();
@@ -384,6 +389,7 @@ void optimization_engine_t<amosa_point_t>::run(unsigned int num_threads)
 		}
 
 		// private and temporary archives must be merged
+		std::cout << " Merging private archives...";
 		std::vector<std::thread>::iterator thr_it;
 		arc_it = private_archives.begin();
 		pareto_archive.erase(pareto_archive.begin(), pareto_archive.end());
@@ -397,12 +403,15 @@ void optimization_engine_t<amosa_point_t>::run(unsigned int num_threads)
 		}
 		
 		// Archive clustering is needed to reduce the amount of archive solutions.
+		std::cout << " Performing archive clustering...";
 		archive_clustering(pareto_archive, true);
 		
 		// Removes eventually dominated solutions from the archive
+		std::cout << " Removing dominated solutions...";
 		typename std::vector<amosa_point_t>::iterator it = pareto_archive.begin();
 		for (; it != pareto_archive.end(); it++)
-			remove_dominated_archived_solutions(*it, pareto_archive);		
+			remove_dominated_archived_solutions(*it, pareto_archive);
+		std::cout << " All done!" << std::endl;
 	}
 }
 
@@ -427,12 +436,15 @@ void optimization_engine_t<amosa_point_t>::run(const amosa_point_t& baseline_sol
 {
 	if (num_threads == 0)
 		throw std::invalid_argument("The amount of parallel threads cannot be 0");
-
+	std::cout << "Running the Archived Multi-Objective Simulated Annealing optimization algorithm with " << num_threads << " threads!" << std::endl << std::endl;
+	std::cout << "Initializing the archive...";
 	initialize_archive_baseline(baseline_solution, num_threads);
+	std::cout <<" All done!" << std::endl;
 
 	// temperature partitioning and padding
 	double current_temperature = initial_temperature;
 	std::vector<double> temperatures;
+	std::cout << "Performing temperature partitioning among threads...";
 	while (current_temperature > final_temperature)
 	{
 		temperatures.push_back(current_temperature);
@@ -440,11 +452,12 @@ void optimization_engine_t<amosa_point_t>::run(const amosa_point_t& baseline_sol
 	}
 	while ((temperatures.size() % num_threads) != 0)
 		temperatures.insert(temperatures.begin(), initial_temperature);
-
+	std::cout << " Done!" << std::endl;
+	
 	std::vector<double>::const_iterator temperatures_it = temperatures.cbegin(), temperatures_end = temperatures.cend();
 	while (temperatures_it != temperatures_end)
 	{
-		std::cout << "Current temperature " << *temperatures_it << std::endl;
+		std::cout << "Current temperature " << *temperatures_it << ". Spawning threads...";
 		// each thread has its own private and temporary archive
 		std::vector<std::vector<amosa_point_t>> private_archives(num_threads);
 		typename std::vector<std::vector<amosa_point_t>>::iterator arc_it = private_archives.begin();
@@ -464,6 +477,7 @@ void optimization_engine_t<amosa_point_t>::run(const amosa_point_t& baseline_sol
 					*temperatures_it));
 		}
 
+		std::cout << " Merging private archives...";
 		// private and temporary archives must be merged
 		std::vector<std::thread>::iterator thr_it;
 		arc_it = private_archives.begin();
@@ -478,12 +492,15 @@ void optimization_engine_t<amosa_point_t>::run(const amosa_point_t& baseline_sol
 		}
 		
 		// Archive clustering is needed to reduce the amount of archive solutions.
+		std::cout << " Performing clustering...";
 		archive_clustering(pareto_archive, true);
 		
 		// Removes eventually dominated solutions from the archive
+		std::cout << " Removing dominated solutions...";
 		typename std::vector<amosa_point_t>::iterator it = pareto_archive.begin();
 		for (; it != pareto_archive.end(); it++)
-			remove_dominated_archived_solutions(*it, pareto_archive);		
+			remove_dominated_archived_solutions(*it, pareto_archive);
+		std::cout << " All done!" << std::endl;
 	}
 
 }
@@ -502,7 +519,7 @@ void optimization_engine_t<amosa_point_t>::initialize_archive(unsigned num_threa
 {
 	// twice the soft limit archive size solutions will be generated, to improve diversity
 	unsigned total_starting_solutions = 2 * archive_size_soft_limit / num_threads;
-	
+	std::cout << " Spawning threads...";
 	// partitioning of the outer loop
 	// each thread has its own private and temporary archive
 	std::vector<std::vector<amosa_point_t>> private_archives(num_threads);
@@ -516,6 +533,7 @@ void optimization_engine_t<amosa_point_t>::initialize_archive(unsigned num_threa
 				total_starting_solutions, 
 				arc_it));
 
+	std::cout << " Merging private archives...";
 	// private and temporary archives must be merged
 	std::vector<std::thread>::iterator thr_it;
 	arc_it = private_archives.begin();
@@ -530,6 +548,7 @@ void optimization_engine_t<amosa_point_t>::initialize_archive(unsigned num_threa
 	}
 	
 	// Archive clustering is needed to reduce the amount of archive solutions.
+	std::cout << " Performing archive clustesing...";
 	archive_clustering(pareto_archive, true);
 }
 
@@ -589,6 +608,7 @@ void optimization_engine_t<amosa_point_t>::initialize_archive_baseline(const amo
 	std::vector<std::vector<amosa_point_t>> private_archives(num_threads);
 	typename std::vector<std::vector<amosa_point_t>>::iterator arc_it = private_archives.begin();
 	std::vector<std::thread> threads_id;
+	std::cout << " Spawning threads...";
 	for (unsigned i = 0; i < num_threads; i++, arc_it++)
 		threads_id.push_back(
 			std::thread(
@@ -602,6 +622,7 @@ void optimization_engine_t<amosa_point_t>::initialize_archive_baseline(const amo
 	std::vector<std::thread>::iterator thr_it;
 	arc_it = private_archives.begin();
 	pareto_archive.erase(pareto_archive.begin(), pareto_archive.end());
+	std::cout << " Merging private archives...";
 	for(thr_it = threads_id.begin(); thr_it != threads_id.end(); thr_it++)
 	{
 		thr_it->join();
@@ -612,6 +633,7 @@ void optimization_engine_t<amosa_point_t>::initialize_archive_baseline(const amo
 	}
 	
 	// Archive clustering is needed to reduce the amount of archive solutions.
+	std::cout << " Performing archive clustering...";
 	archive_clustering(pareto_archive, true);
 }
 
