@@ -272,7 +272,7 @@ class optimization_engine_t
 	 * @note The value will be set only if the optimization engine is not
 	 * running.
 	 */
-	void set_numiteration(unsigned int iterations) noexcept 
+	void set_numiteration(unsigned int iterations) noexcept
 	{
 		num_iteration = iterations;
 	}
